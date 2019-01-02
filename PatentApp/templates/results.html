@@ -1,0 +1,68 @@
+<!doctype html>
+<title>Patent Art Unit Classifier App <sup>beta</sup></title>
+<head>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<script type="text/javascript" color="0,100,200" opacity="5" src="http://www.freecodeformat.com/js/canvas-nest.min.js"></script>
+<div class="container">
+<h1>
+    <a href="https://patentanalyticsapp.herokuapp.com/">Patent Art Unit Classification System <sup>beta*</sup></a>
+</h1>
+
+    <div id="container_right">
+        {% if error %}
+    <h2><font color="red">{{ error }}</font></h2>
+    {% endif %}
+
+
+
+    </div>
+
+    <div class="container2">
+        <p>  </p>
+        {% for class, score in results %}
+        <p>{{ class }}00</p>
+        <div class="progress">
+            {% if class == group[0] %}
+            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40"
+                 aria-valuemin="0" aria-valuemax="100" style="width:{{ score * 100 }}%">
+                   {{ score * 100 }}%
+              </div>
+            {% else %}
+            <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="40"
+                 aria-valuemin="0" aria-valuemax="100" style="width:{{ score * 100 }}%">
+                   {{ score * 100 }}%
+              </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+
+        <p>Classified Group: <font color="green"><b>{{ group[0] }}00</b></font></p>
+        <hr>
+        <form action="/query" method="POST">
+        <div id="content">
+             <p><h3>Title:</h3><textarea rows="4" cols="77" name=title >{{ title }}</textarea></p>
+             <p><h3>Abstract:</h3><textarea rows="10" cols="77" name=abstract >{{ abstract }}</textarea></p>
+             <p><h3>Description:</h3><textarea rows="10" cols="77" name=description >{{ description }}</textarea></p>
+             <p><h3>First Independent Claim:</h3><textarea rows="20" cols="77" type=text name=claims >{{ claims }}</textarea></p>
+             <div id="submit-button">
+                <input type=submit value=Submit class="graphite-flat-button"/>
+             </div>
+             <p>*This beta is intended for testing purposes only. Any use of this application without permission is strictly prohibited.   </p>
+    </div>
+
+
+</div>
+
+</body>
