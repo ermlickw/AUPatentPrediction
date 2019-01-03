@@ -19,8 +19,8 @@ USERNAME = 'admin'
 PASSWORD = 'default'
 app = Flask(__name__)
 app.config.from_object(__name__)
-app.config['BASIC_AUTH_USERNAME'] = 'vt'
-app.config['BASIC_AUTH_PASSWORD'] = 'hokies'
+app.config['BASIC_AUTH_USERNAME'] = 'admin'
+app.config['BASIC_AUTH_PASSWORD'] = 'admin'
 
 basic_auth = BasicAuth(app)
 
@@ -113,6 +113,7 @@ def submit_query():
             enteredtokens= enteredtokens + list(claimsmodel.fit([df['claims']]).vocabulary_.keys())
         enteredtokens=set(enteredtokens)
 
+        #get words in submission that match top words in each TC/AU
         words=dict()
         for root, dirs, files in os.walk(topfolder+"/TopWords/"):
             for file in files:
