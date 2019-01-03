@@ -55,13 +55,18 @@ features = titlemodel.get_feature_names() +\
      claimsmodel.get_feature_names() + ['response']
 
 
-outdf = top_tfidf_feats(np.array(finaldf.values[0]),features)
-print(outdf)
-outer = top_mean_feats(alldf, features, '28', 0.1,20)
-print(outer.iloc[1:,:])
+# outdf = top_tfidf_feats(np.array(finaldf.values[0]),features)
+# print(outdf)
+# outer = top_mean_feats(alldf, features, '28', 0.1,20)
+# print(outer.iloc[1:,:])
 
+units = set(alldf['response'])
 
-# get top X words for each TC/AU
+for unit in units:
+    words = top_mean_feats(alldf,features,unit,0.1,100)
+    words = words.iloc[1:,0]
+    pickle.dump(words, open('TopWords/'+unit, 'wb'))
+
 # show the words in input that match these top words ranked by tfidf score
 #clicking on one of the shown AU shows the full list of words/phrases
 #to incorporate to move app to that TC

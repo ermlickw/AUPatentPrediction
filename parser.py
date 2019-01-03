@@ -1,10 +1,11 @@
 '''
-Patent AU Prediction Project 
+Patent AU Prediction Project
 Billy Ermlick
 
-This script was used to parse the data from the downloaded xml content into CSV files
-for the training and testing data.
+This script is used to convert downloaded IPG.xml files to a single CSV for
+classification training.
 '''
+#libraries
 import time
 import sys
 import os
@@ -19,6 +20,9 @@ import zipfile
 
 
 def unzipdownloads(DownloadLocation, IPGlocation):
+    '''
+    Unzipps files in the downloads location and sends them to your IPG storage location
+    '''
     for root, dirs, files in os.walk(DownloadLocation): #walk it
         for file in files:
             if file.endswith(".zip"):
@@ -32,8 +36,8 @@ def unzipdownloads(DownloadLocation, IPGlocation):
 
 def getxmlfiles(datafolderholder, xmlfolder):
     '''
-    This will take all files in datafolderholder and create individual xml files
-    in datasubfolder with patent application number as title
+    Takes IPG files in IPG storage location and creates individual XML files
+    in an XML folder.
     '''
     data_to_write = ""
     docnumb = "error"
@@ -76,6 +80,9 @@ def getxmlfiles(datafolderholder, xmlfolder):
                         i=i+1
 
 def getbigcsvfile(xmlfolder, filename):
+    '''
+    Creates single CSV file from all of the individual xml files
+    '''
     db = dataset.connect()  # create table
     table = db['PATENT_DATA']
     toinsert = dict()
@@ -109,22 +116,29 @@ def getbigcsvfile(xmlfolder, filename):
     print('Upload Successful.')
 
 if __name__ == '__main__':
-    DownloadLocation = r"C:\Users\BillyErmlick\Downloads"
-    IPGlocation = 'PatentData'
-    XMLlocation = "IndividualFiles"
+    #set folder locations
+    DownloadLocation = r"C:\Users\BillyErmlick\Downloads" #directory with downloaded zipped IPG files
+    IPGlocation = 'PatentData' #where unzipped IPG files will be placed
+    XMLlocation = "IndividualFiles" #where indvidiaul files will be placed
+
+    #unzip
     start=time.time()
-    # unzipdownloads(DownloadLocation, IPGlocation)
+    unzipdownloads(DownloadLocation, IPGlocation)
     then=time.time()
     print("unzipped in ",round(then-start,2)/60, "minutes")
-    # getxmlfiles(IPGlocation, XMLlocation)
+
+    #get xml files
+    getxmlfiles(IPGlocation, XMLlocation)
     then=time.time()
     print("converted to XML in ",round(then-start,2)/60, "minutes")
+
+    #create CSV file
     getbigcsvfile(os.path.join(IPGlocation,XMLlocation),"CSVs/GrantData.csv")
     then=time.time()
     print("CSV created in ",round(then-start,2)/60, "minutes")
 
     import pandas as pd
-    df = pd.read_csv('GrantData.csv')
+    df = pd.read_csv('CSVs/GrantData.csv')
     print(list(df))
     print(df.iloc[1,:])
     print(len(df))

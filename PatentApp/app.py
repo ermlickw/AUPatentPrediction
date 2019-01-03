@@ -7,8 +7,12 @@ import pandas as pd
 from nltk.stem.porter import PorterStemmer
 from nltk.tokenize import RegexpTokenizer
 from nltk.corpus import stopwords
+import os
+import sys
 
 topfolder = r"C:\Users\BillyErmlick\Desktop\Workspace\FirmWork\ArtUnitPredictions"
+sys.path.insert(0, topfolder)
+from factory import tokenize
 DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
@@ -19,20 +23,6 @@ app.config['BASIC_AUTH_USERNAME'] = 'vt'
 app.config['BASIC_AUTH_PASSWORD'] = 'hokies'
 
 basic_auth = BasicAuth(app)
-
-def tokenize(txt):
-    """
-    Tokenizer that uses porter stemmer to stemm all words
-    :param text:
-    :return:
-    """
-    txt = re.sub(r'\d+', '', txt) #remove numbers
-    tokenizer = RegexpTokenizer(r'\w+') #remove punctuation
-    tokens = tokenizer.tokenize(txt)
-    stemmer = PorterStemmer()
-    stemmed = [stemmer.stem(item) for item in tokens]
-    return stemmed
-
 
 @app.route('/')
 @basic_auth.required
@@ -110,13 +100,37 @@ def submit_query():
         #load model
         clf = pickle.load(open(topfolder + "/Classifiers/"+"LogisticRegression",'rb'))
 
+
+        #get matched key tokens
+        enteredtokens = []
+        if df['title']:
+            enteredtokens= enteredtokens + list(titlemodel.fit([df['title']]).vocabulary_.keys())
+        if df['abstract']:
+            enteredtokens= enteredtokens + list(abstractmodel.fit([df['abstract']]).vocabulary_.keys())
+        if df['description']:
+            enteredtokens= enteredtokens + list(descriptionmodel.fit([df['description']]).vocabulary_.keys())
+        if df['claims']:
+            enteredtokens= enteredtokens + list(claimsmodel.fit([df['claims']]).vocabulary_.keys())
+        enteredtokens=set(enteredtokens)
+
+        words=dict()
+        for root, dirs, files in os.walk(topfolder+"/TopWords/"):
+            for file in files:
+                data = list(pickle.load(open(topfolder+'/TopWords/'+str(file),'rb')))
+                words[file] = ', '.join(set(data)&set(enteredtokens))
+                print(words[file])
+
         #make predictions and record results
         group = clf.predict(finaldf)
         probs = clf.predict_proba(finaldf)
         groups = clf.classes_
         results = dict()
         for i, clas in enumerate(groups):
-            results[clas] = probs[0][i]
+            try:
+                results[clas] = [probs[0][i],words[clas]]
+            except:
+                results[clas] = [probs[0][i], []]
+
         return render_template('results.html', group=group, results=sorted(results.items()),
                                title=title, abstract=abstract, description=description, claims=claims)
 

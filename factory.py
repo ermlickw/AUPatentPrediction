@@ -2,7 +2,9 @@
 Patent AU Prediction Project | 12/28/2018
 Billy Ermlick
 ********************************************************************************
-
+This script is used for creating tfidf Vectors, training classifiers, and saving
+test and train dataframes. The tfidf vectors and classifiers will be used in
+the web app.
 ********************************************************************************
 '''
 #import libraries
@@ -51,13 +53,11 @@ import string
 
 def tokenize(txt):
     """
-    Tokenizer that uses porter stemmer to stemm all words
-    :param text:
-    :return:
+    Tokenizer and stemmer for all of the data fields
     """
     txt = re.sub(r'\d+', '', txt) #remove numbers
     txt = "".join(c for c in txt if c not in string.punctuation) #remove punctuation
-    otherstops = ['claim','claims', 'ref', 'refer','disclosur','includ','provid','form','crossrefer', 'particularli',
+    otherstops = ['claim','claims', 'embodi', 'exampl','unit','plural', 'ref', 'refer','disclosur','includ','provid','form','crossrefer', 'particularli',
     'use','benefit','second', 'devic', 'incorpor', 'relat','background','present','prioriti','field','patent',
     'applic','crossref','invent', 'art', 'disclos',
     'file','technic', 'config', 'configur', 'machin', 'addit', 'response', 'signatur', 'realt','comprising', 'comprise', 'comprises',
@@ -77,7 +77,9 @@ def tokenize(txt):
     return stemmed
 
 def makenewprediction(df):
-    print(df)
+    '''
+    function to test out making a single prediction on new data
+    '''
     #convert to lowercase
     df=df.copy()
     df.iloc[6:10] = df.iloc[6:10].apply(lambda x: x.lower())
@@ -115,6 +117,7 @@ def makenewprediction(df):
     #if reduction wanted
     # PCAmodel = pickle.load(open("Classifiers/"+"PCAmodel",'rb'))
     # finaldf = pd.DataFrame(PCAmodel.transform(finaldf))
+
     #make prediction
     clf = pickle.load(open("Classifiers/"+"LogisticRegression",'rb'))
     prediction = clf.predict(finaldf)
@@ -125,7 +128,7 @@ def print_cm(cm, classes,
               title='Confusion matrix',
               cmap=plt.cm.Blues):
     """
-    This function prints and plots the confusion matrix.
+    This function prints and plots a confusion matrix.
     Normalization can be applied by setting `normalize=True`.
     adapted from: https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
     """
@@ -154,7 +157,7 @@ def preprocess_dataframe(df, numbtrainrows):
     '''
     This function cleans the dataset and represent each document by a feature vector
     The data is first cleaned, then tokenized into a TFIDF representation
-    The TFIDF representations are then reduced using LSA or PCA
+    The TFIDF representations are then optionally reduced using LSA or PCA
     The results are then saved to the directory
     '''
 
@@ -166,12 +169,12 @@ def preprocess_dataframe(df, numbtrainrows):
     df['abstract'] = df['abstract'].apply(lambda x: ' '.join(x.split()[:50]))
     df['claims'] = df['claims'].apply(lambda x: ' '.join(x.split()[:50]))
     df.dropna(how='any')
-
     response_vector = df['art_unit']
-
     #create tfidf matrix
     def create_tfidfmatrix(inputcolumn, docs, name):
-        #prep model
+        '''
+        TFIDF model creation
+        '''
         n_grams = 3
         feature_model = TfidfVectorizer(
             ngram_range=(1, n_grams),
@@ -342,7 +345,7 @@ def main(load_data,load_models):
     for v,k in d_view:
         print(k,v)
 
-    #make predictions
+    #make predictions for new data
     makenewprediction(df.iloc[2,:])
 
 if __name__ == '__main__':
