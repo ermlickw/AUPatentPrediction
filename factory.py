@@ -17,14 +17,10 @@ import seaborn as sns
 import pandas as pd
 import re
 import numpy as np
-import operator
-from collections import defaultdict
 import matplotlib.pyplot as plt
-
-from nltk.stem.porter import PorterStemmer
-from nltk.tokenize import RegexpTokenizer
-from nltk.corpus import stopwords
 import pickle
+
+from auxiliary import tokenize, print_cm
 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
@@ -34,126 +30,15 @@ from sklearn import model_selection, preprocessing, linear_model, naive_bayes, m
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn import decomposition, ensemble
 from sklearn.decomposition import TruncatedSVD
-from sklearn.decomposition import PCA
-from sklearn.cross_decomposition import PLSRegression
-from sklearn.feature_selection import SelectPercentile, f_classif
 from sklearn.linear_model import SGDClassifier, PassiveAggressiveClassifier, Perceptron, LogisticRegression
 from sklearn.model_selection import KFold
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
-from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import confusion_matrix
-from sklearn.feature_extraction import text
-from numpy import loadtxt
-import itertools
-from nltk.corpus import stopwords
-from nltk import word_tokenize
-import numpy as np
-import string
-
-def tokenize(txt):
-    """
-    Tokenizer and stemmer for all of the data fields
-    """
-    txt = re.sub(r'\d+', '', txt) #remove numbers
-    txt = "".join(c for c in txt if c not in string.punctuation) #remove punctuation
-    otherstops = ['claim','claims', 'embodi', 'exampl','unit','plural', 'ref', 'refer','disclosur','includ','provid','form','crossrefer', 'particularli',
-    'use','benefit','second', 'devic', 'incorpor', 'relat','background','present','prioriti','field','patent',
-    'applic','crossref','invent', 'art', 'disclos',
-    'file','technic', 'config', 'configur', 'machin', 'addit', 'response', 'signatur', 'realt','comprising', 'comprise', 'comprises',
-    'responses', 'method', 'remov','make', 'specif','product','apparatus','afterward', 'alon', 'alreadi',
-    'alway', 'anoth', 'anyon', 'anyth', 'anywher', 'apparatu', 'becam', 'becom', 'besid', 'cri', 'describ', 'els',
-     'elsewher', 'empti', 'everi','everyon', 'everyth', 'everywher', 'fifti', 'formerli', 'forti', 'henc', 'hereaft',
-      'herebi', 'howev', 'hundr', 'inde', 'oper','latterli', 'mani', 'meanwhil', 'moreov', 'mostli', 'nobodi', 'noon', 'noth',
-       'nowher', 'otherwis', 'perhap', 'pleas','respons', 'seriou', 'sever', 'sinc', 'sincer', 'sixti', 'someon',
-       'someth', 'sometim', 'somewher', 'thenc', 'compon', 'thereaft', 'therebi', 'therefor', 'thu', 'togeth', 'twelv', 'twenti',
-        'whatev', 'whenc', 'whenev', 'wherea', 'whereaft', 'wherebi', 'wherev','anywh', 'el', 'elsewh', 'everywh',
-         'ind', 'otherwi', 'plea', 'print', 'block', 'figure', 'success', 'embodiments','implementat','respon', 'somewh','related']
-    stop = text.ENGLISH_STOP_WORDS.union(string.punctuation).union(otherstops).union(stopwords.words('english'))
-    tokens = [i for i in word_tokenize(txt.lower()) if i not in stop]
-    stemmer = PorterStemmer()
-    stemmed = [stemmer.stem(item).strip() for item in tokens if (stemmer.stem(item) not in stop and len(stemmer.stem(item))>1)]
-    # print(stemmed)
-    return stemmed
-
-def makenewprediction(df):
-    '''
-    function to test out making a single prediction on new data
-    '''
-    #convert to lowercase
-    df=df.copy()
-    df.iloc[6:10] = df.iloc[6:10].apply(lambda x: x.lower())
-    #keep only first 50 words
-    df['description'] =  ' '.join(df['description'].split()[:50])
-    df['title'] = ' '.join(df['title'].split()[:50])
-    df['abstract'] = ' '.join(df['abstract'].split()[:50])
-    df['claims'] = ' '.join(df['claims'].split()[:50])
-
-    #load vectorizers
-    titlemodel = pickle.load(open("TFIDFvectorizers/title-test",'rb'))
-    abstractmodel = pickle.load(open("TFIDFvectorizers/abstract-test",'rb'))
-    claimsmodel = pickle.load(open("TFIDFvectorizers/claims-test",'rb'))
-    descriptionmodel = pickle.load(open("TFIDFvectorizers/descript-test",'rb'))
-    # PCAmodel = pickle.load(open("PCAmodel",'rb'))
+from sklearn. model_selection import train_test_split
 
 
-    titlematrix = titlemodel.transform([df['title']])
-    titledf = pd.DataFrame(data=titlematrix.toarray())
 
-    abstractmatrix = abstractmodel.transform([df['abstract']])
-    abstractdf = pd.DataFrame(data=abstractmatrix.toarray())
-
-    descriptionmatrix = descriptionmodel.transform([df['description']])
-    descriptiondf = pd.DataFrame(data=descriptionmatrix.toarray())
-
-    claimsmatrix = claimsmodel.transform([df['claims']])
-    claimsdf = pd.DataFrame(data=claimsmatrix.toarray())
-
-    finaldf = pd.concat([titledf,
-                    abstractdf,
-                    descriptiondf,
-                    claimsdf], axis=1)
-
-    #if reduction wanted
-    # PCAmodel = pickle.load(open("Classifiers/"+"PCAmodel",'rb'))
-    # finaldf = pd.DataFrame(PCAmodel.transform(finaldf))
-
-    #make prediction
-    clf = pickle.load(open("Classifiers/"+"LogisticRegression",'rb'))
-    prediction = clf.predict(finaldf)
-    print(prediction)
-
-def print_cm(cm, classes,
-              normalize=False,
-              title='Confusion matrix',
-              cmap=plt.cm.Blues):
-    """
-    This function prints and plots a confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    adapted from: https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
-    """
-    fig1=plt.figure(figsize=(30,30))
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title(title)
-    plt.colorbar()
-    tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
-
-    fmt = '.2f' if normalize else 'd'
-    thresh = cm.max() / 2.
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, round(cm[i, j], 2),
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
-
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    # plt.show()
-    fig1.savefig("CMs/"+title,dpi=100)
-
-def preprocess_dataframe(df, numbtrainrows):
+def preprocess_dataframe(df):
     '''
     This function cleans the dataset and represent each document by a feature vector
     The data is first cleaned, then tokenized into a TFIDF representation
@@ -216,18 +101,10 @@ def preprocess_dataframe(df, numbtrainrows):
     # df_feature_vector = SVDtrunc.fit_transform(df_feature_vector)
     # pickle.dump(SVDtrunc, open('SVDmodel', 'wb'))
 
-    #PCA on feature_matrix
-    # pca = PCA(n_components=100)
-    # df_feature_vector = pca.fit_transform(df_feature_vector)
-    # pickle.dump(pca, open('Classifiers/PCAmodel', 'wb'))
-
     #assign to train and test vectors and labels
     df_feature_vector = pd.DataFrame(df_feature_vector)
-    train_feature_vector = df_feature_vector.iloc[:numbtrainrows,:]
-    test_feature_vector = df_feature_vector.iloc[numbtrainrows:,:]
+    train_feature_vector, test_feature_vector, train_response_vector, test_response_vector = train_test_split(df_feature_vector,response_vector, test_size=0.33,random_state=42)
     df_feature_vector =None
-    train_response_vector = response_vector.iloc[:numbtrainrows]
-    test_response_vector = response_vector.iloc[numbtrainrows:]
     response_vector = None
 
     #save the processed dataset
@@ -282,7 +159,7 @@ def train_model(classifier, params,
 def main(load_data,load_models):
     '''
     This is the main function.
-    Data is read in from the directory and subsampled based on the Experiment.
+    Data is read in from the directory and subsetted.
     Feature vectors are either created or loaded.
     Classifiers are either trained or loaded.
     Predicted results on the test set are provided.
@@ -292,8 +169,8 @@ def main(load_data,load_models):
                                 os.path.isfile('TrainTestPreparedData/train_label.npy') or
                                 os.path.isfile('TrainTestPreparedData/test.npy') or
                                 os.path.isfile('TrainTestPreparedData/test_label.npy')):
-        #open files
-        df = pd.read_csv('CSVs/GrantData.csv', nrows=70000)
+        #open data
+        df = pd.read_csv('CSVs/GrantData.csv', nrows=50)
         print(len(df))
 
         # select TCs/AUs of interest
@@ -301,7 +178,8 @@ def main(load_data,load_models):
         labels = list(set(df['art_unit'].apply(lambda x: (x[:2]).strip())))
         # df= df[df['art_unit']==['17', '21', '24','26','28''36'],:]
 
-        train_feature_vector, train_response_vector, test_feature_vector, test_response_vector = preprocess_dataframe(df,round(len(df)/10)*9)
+        #preprocess and make features
+        train_feature_vector, train_response_vector, test_feature_vector, test_response_vector = preprocess_dataframe(df)
         then=time.time()
         print("Feature and Response vectors CREATED in ",round(then-now,2), "seconds")
 
@@ -326,31 +204,27 @@ def main(load_data,load_models):
             # 'Perceptron': [Perceptron(), {'alpha': np.arange(0.00001, 0.001, 0.00001)}], #
         }
 
-    #train model for all classifiers and output results
+    ####train model for all classifiers and output results
     macroprecision = {}
     for model in classifiers.keys():
         acc, prec,recall, cr, cm, f1 = train_model(classifiers[model][0], classifiers[model][1],
                                                             train_feature_vector, train_response_vector,
                                                             test_feature_vector, test_response_vector,
-                                                            model,labels,
-                                                            load_models)
+                                                            model, labels, load_models)
         then=time.time()
         macroprecision.update({model:[round(f1,2), round(prec,2),round(recall,2), round(acc,2)]})
-        print(model, "finished in ", round(then-now,2)/60, "minutes")
+    print(model, "finished in ", round(then-now,2)/60, "minutes")
 
-    #print final results
+    ####print final results
     print('\n FINAL RESULTS | MACRO-F1  | MACRO-PRECISION | MACRO-RECALL | ACC')
     d_view = [ (v,k) for k,v in macroprecision.items() ]
     d_view.sort(reverse=True)
     for v,k in d_view:
         print(k,v)
 
-    #make predictions for new data
-    makenewprediction(df.iloc[2,:])
 
 if __name__ == '__main__':
     now=time.time()
-    #preprocess data and create feature vectors OR load created data
     load_data = False
     load_models = False
     main(load_data, load_models)

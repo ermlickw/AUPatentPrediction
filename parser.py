@@ -120,7 +120,7 @@ if __name__ == '__main__':
     DownloadLocation = r"C:\Users\BillyErmlick\Downloads" #directory with downloaded zipped IPG files
     IPGlocation = 'PatentData' #where unzipped IPG files will be placed
     XMLlocation = "IndividualFiles" #where indvidiaul files will be placed
-
+    CSVLocation = "CSVs/GrantData.csv" #name and location of final CSV
     #unzip
     start=time.time()
     unzipdownloads(DownloadLocation, IPGlocation)
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     print("converted to XML in ",round(then-start,2)/60, "minutes")
 
     #create CSV file
-    getbigcsvfile(os.path.join(IPGlocation,XMLlocation),"CSVs/GrantData.csv")
+    getbigcsvfile(os.path.join(IPGlocation,XMLlocation),CSVLocation)
     then=time.time()
     print("CSV created in ",round(then-start,2)/60, "minutes")
 

@@ -1,18 +1,18 @@
 from flask import Flask, request, render_template
-from scipy.sparse import hstack
 from flask_basicauth import BasicAuth
 from os import environ, path
-import re, string, pickle
 import pandas as pd
-from nltk.stem.porter import PorterStemmer
-from nltk.tokenize import RegexpTokenizer
-from nltk.corpus import stopwords
 import os
 import sys
-
-topfolder = r"C:\Users\BillyErmlick\Desktop\Workspace\FirmWork\ArtUnitPredictions"
+import pickle
+cd=os.getcwd()
+os.chdir("..")
+topfolder = os.path.abspath(os.curdir)
 sys.path.insert(0, topfolder)
 from factory import tokenize
+os.chdir(cd)
+print(topfolder)
+
 DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
@@ -117,9 +117,12 @@ def submit_query():
         words=dict()
         for root, dirs, files in os.walk(topfolder+"/TopWords/"):
             for file in files:
-                data = list(pickle.load(open(topfolder+'/TopWords/'+str(file),'rb')))
-                words[file] = ', '.join(set(data)&set(enteredtokens))
-                print(words[file])
+                if bool(words.get(file)):
+                    data = list(pickle.load(open(topfolder+'/TopWords/'+str(file),'rb')))
+                    words[file] = ', '.join(set(data)&set(enteredtokens))
+                    print(words[file])
+                else:
+                    continue
 
         #make predictions and record results
         group = clf.predict(finaldf)

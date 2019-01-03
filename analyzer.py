@@ -1,4 +1,11 @@
-from factory import *
+'''
+Patent AU Prediction Project
+Billy Ermlick
+
+This script is used to analyze the top tokens used in each art unit for insight
+'''
+
+from auxiliary import tokenize
 import pickle
 import pandas as pd
 import numpy as np
