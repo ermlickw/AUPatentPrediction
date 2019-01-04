@@ -11,7 +11,7 @@ topfolder = os.path.abspath(os.curdir)
 sys.path.insert(0, topfolder)
 from factory import tokenize
 os.chdir(cd)
-print(topfolder)
+
 
 DEBUG = True
 SECRET_KEY = 'development key'
@@ -115,12 +115,12 @@ def submit_query():
 
         #get words in submission that match top words in each TC/AU
         words=dict()
-        for root, dirs, files in os.walk(topfolder+"/TopWords/"):
+        for root, dirs, files in os.walk(topfolder+r"\TopWords"):
             for file in files:
-                if bool(words.get(file)):
+                if "ignore" not in str(file):
+
                     data = list(pickle.load(open(topfolder+'/TopWords/'+str(file),'rb')))
                     words[file] = ', '.join(set(data)&set(enteredtokens))
-                    print(words[file])
                 else:
                     continue
 

@@ -170,7 +170,7 @@ def main(load_data,load_models):
                                 os.path.isfile('TrainTestPreparedData/test.npy') or
                                 os.path.isfile('TrainTestPreparedData/test_label.npy')):
         #open data
-        df = pd.read_csv('CSVs/GrantData.csv', nrows=50)
+        df = pd.read_csv('CSVs/GrantData.csv', nrows=70000)
         print(len(df))
 
         # select TCs/AUs of interest
