@@ -1,5 +1,4 @@
-# AUPatentPrediction
-## Billy Ermlick
+# AUPatentPredictionProject
 ****************************************************************************
 This is a repo to analyze data stored in https://bulkdata.uspto.gov/data/patent/grant/redbook/fulltext/2018/. 
 WINDOWS ONLY CURRENTLY
